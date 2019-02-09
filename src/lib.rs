@@ -74,54 +74,49 @@ pub trait SubtitleFile {
 
 /// Generic parsed SubtitleFile
 #[derive(Debug, Clone)]
-pub enum SubtitleFileVariant {
-    /// .srt file
+pub struct GenericSubtitleFile(SubtitleFileVariant);
+
+// Kept private so that adding new variants doesn't cause breaking changes
+#[derive(Debug, Clone)]
+enum SubtitleFileVariant {
     Srt(SrtFile),
-
-    /// .ssa/.ass file
     Ssa(SsaFile),
-
-    /// .idx file
     Idx(IdxFile),
-
-    /// .sub file (`VobSub`/binary)
     Vob(VobFile),
-
-    /// .sub file (`MicroDVD`/text)
     Mdvd(MdvdFile),
 }
 
-impl SubtitleFile for SubtitleFileVariant {
+impl SubtitleFile for GenericSubtitleFile {
     fn get_subtitle_entries(&self) -> Result<Vec<SubtitleEntry>> {
         use SubtitleFileVariant::*;
-        match self {
-            Idx(f) => f.get_subtitle_entries(),
-            Mdvd(f) => f.get_subtitle_entries(),
-            Srt(f) => f.get_subtitle_entries(),
-            Ssa(f) => f.get_subtitle_entries(),
-            Vob(f) => f.get_subtitle_entries(),
+        match self.0 {
+            Idx(ref f) => f.get_subtitle_entries(),
+            Mdvd(ref f) => f.get_subtitle_entries(),
+            Srt(ref f) => f.get_subtitle_entries(),
+            Ssa(ref f) => f.get_subtitle_entries(),
+            Vob(ref f) => f.get_subtitle_entries(),
         }
     }
 
     fn update_subtitle_entries(&mut self, i: &[SubtitleEntry]) -> Result<()> {
         use SubtitleFileVariant::*;
-        match self {
-            Idx(f) => f.update_subtitle_entries(i),
-            Mdvd(f) => f.update_subtitle_entries(i),
-            Srt(f) => f.update_subtitle_entries(i),
-            Ssa(f) => f.update_subtitle_entries(i),
-            Vob(f) => f.update_subtitle_entries(i),
+        match self.0 {
+            Idx(ref mut f) => f.update_subtitle_entries(i),
+            Mdvd(ref mut f) => f.update_subtitle_entries(i),
+            Srt(ref mut f) => f.update_subtitle_entries(i),
+            Ssa(ref mut f) => f.update_subtitle_entries(i),
+            Vob(ref mut f) => f.update_subtitle_entries(i),
         }
     }
 
     fn to_data(&self) -> Result<Vec<u8>> {
         use SubtitleFileVariant::*;
-        match self {
-            Idx(f) => f.to_data(),
-            Mdvd(f) => f.to_data(),
-            Srt(f) => f.to_data(),
-            Ssa(f) => f.to_data(),
-            Vob(f) => f.to_data(),
+        match self.0 {
+            Idx(ref f) => f.to_data(),
+            Mdvd(ref f) => f.to_data(),
+            Srt(ref f) => f.to_data(),
+            Ssa(ref f) => f.to_data(),
+            Vob(ref f) => f.to_data(),
         }
     }
 }

@@ -11,7 +11,7 @@ pub mod vobsub;
 
 use encoding_rs::Encoding;
 use errors::*;
-use SubtitleFileVariant;
+use GenericSubtitleFile;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 /// All formats which are supported by this library.
@@ -108,16 +108,18 @@ pub fn get_subtitle_format_err(ending: &str, content: &[u8]) -> Result<SubtitleF
 /// # Mandatory format specific options
 ///
 /// See `parse_bytes`.
-pub fn parse_str(format: SubtitleFormat, content: &str, fps: f64) -> Result<SubtitleFileVariant> {
+pub fn parse_str(format: SubtitleFormat, content: &str, fps: f64) -> Result<GenericSubtitleFile> {
     use SubtitleFileVariant::*;
 
-    match format {
-        SubtitleFormat::SubRip => Ok(Srt(srt::SrtFile::parse(content)?)),
-        SubtitleFormat::SubStationAlpha => Ok(Ssa(ssa::SsaFile::parse(content)?)),
-        SubtitleFormat::VobSubIdx => Ok(Idx(idx::IdxFile::parse(content)?)),
-        SubtitleFormat::VobSubSub => Err(ErrorKind::TextFormatOnly.into()),
-        SubtitleFormat::MicroDVD => Ok(Mdvd(microdvd::MdvdFile::parse(content, fps)?)),
-    }
+    let variant = match format {
+        SubtitleFormat::SubRip => Srt(srt::SrtFile::parse(content)?),
+        SubtitleFormat::SubStationAlpha => Ssa(ssa::SsaFile::parse(content)?),
+        SubtitleFormat::VobSubIdx => Idx(idx::IdxFile::parse(content)?),
+        SubtitleFormat::MicroDVD => Mdvd(microdvd::MdvdFile::parse(content, fps)?),
+        SubtitleFormat::VobSubSub => return Err(ErrorKind::TextFormatOnly.into()),
+    };
+
+    Ok(GenericSubtitleFile(variant))
 }
 
 /// Helper function for text subtitles for byte-to-text decoding.
@@ -148,14 +150,16 @@ pub fn parse_bytes(
     format: SubtitleFormat,
     content: &[u8],
     encoding: &'static Encoding, fps: f64
-) -> Result<SubtitleFileVariant> {
+) -> Result<GenericSubtitleFile> {
     use SubtitleFileVariant::*;
 
-    match format {
-        SubtitleFormat::SubRip => Ok(Srt(srt::SrtFile::parse(&decode_bytes_to_string(content, encoding)?)?)),
-        SubtitleFormat::SubStationAlpha => Ok(Ssa(ssa::SsaFile::parse(&decode_bytes_to_string(content, encoding)?)?)),
-        SubtitleFormat::VobSubIdx => Ok(Idx(idx::IdxFile::parse(&decode_bytes_to_string(content, encoding)?)?)),
-        SubtitleFormat::VobSubSub => Ok(Vob(vobsub::VobFile::parse(content)?)),
-        SubtitleFormat::MicroDVD => Ok(Mdvd(microdvd::MdvdFile::parse(&decode_bytes_to_string(content, encoding)?, fps)?)),
-    }
+    let variant = match format {
+        SubtitleFormat::SubRip => Srt(srt::SrtFile::parse(&decode_bytes_to_string(content, encoding)?)?),
+        SubtitleFormat::SubStationAlpha => Ssa(ssa::SsaFile::parse(&decode_bytes_to_string(content, encoding)?)?),
+        SubtitleFormat::VobSubIdx => Idx(idx::IdxFile::parse(&decode_bytes_to_string(content, encoding)?)?),
+        SubtitleFormat::VobSubSub => Vob(vobsub::VobFile::parse(content)?),
+        SubtitleFormat::MicroDVD => Mdvd(microdvd::MdvdFile::parse(&decode_bytes_to_string(content, encoding)?, fps)?),
+    };
+
+    Ok(GenericSubtitleFile(variant))
 }
