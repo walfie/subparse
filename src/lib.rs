@@ -72,6 +72,60 @@ pub trait SubtitleFile {
     fn to_data(&self) -> Result<Vec<u8>>;
 }
 
+/// Generic parsed SubtitleFile
+#[derive(Debug, Clone)]
+pub enum SubtitleFileVariant {
+    /// .srt file
+    Srt(SrtFile),
+
+    /// .ssa/.ass file
+    Ssa(SsaFile),
+
+    /// .idx file
+    Idx(IdxFile),
+
+    /// .sub file (`VobSub`/binary)
+    Vob(VobFile),
+
+    /// .sub file (`MicroDVD`/text)
+    Mdvd(MdvdFile),
+}
+
+impl SubtitleFile for SubtitleFileVariant {
+    fn get_subtitle_entries(&self) -> Result<Vec<SubtitleEntry>> {
+        use SubtitleFileVariant::*;
+        match self {
+            Idx(f) => f.get_subtitle_entries(),
+            Mdvd(f) => f.get_subtitle_entries(),
+            Srt(f) => f.get_subtitle_entries(),
+            Ssa(f) => f.get_subtitle_entries(),
+            Vob(f) => f.get_subtitle_entries(),
+        }
+    }
+
+    fn update_subtitle_entries(&mut self, i: &[SubtitleEntry]) -> Result<()> {
+        use SubtitleFileVariant::*;
+        match self {
+            Idx(f) => f.update_subtitle_entries(i),
+            Mdvd(f) => f.update_subtitle_entries(i),
+            Srt(f) => f.update_subtitle_entries(i),
+            Ssa(f) => f.update_subtitle_entries(i),
+            Vob(f) => f.update_subtitle_entries(i),
+        }
+    }
+
+    fn to_data(&self) -> Result<Vec<u8>> {
+        use SubtitleFileVariant::*;
+        match self {
+            Idx(f) => f.to_data(),
+            Mdvd(f) => f.to_data(),
+            Srt(f) => f.to_data(),
+            Ssa(f) => f.to_data(),
+            Vob(f) => f.to_data(),
+        }
+    }
+}
+
 /// The data which can be read from/written to a subtitle file.
 #[derive(Debug)]
 pub struct SubtitleEntry {
