@@ -1,7 +1,7 @@
 extern crate subparse;
 
 use subparse::{get_subtitle_format, parse_str};
-use subparse::SubtitleEntry;
+use subparse::{SubtitleEntry, SubtitleFile};
 use subparse::timetypes::TimeDelta;
 
 /// This function reads the content of a file to a `String`.
